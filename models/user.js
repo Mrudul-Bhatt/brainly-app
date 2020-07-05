@@ -7,12 +7,12 @@ const userSchema = new mongoose.Schema({
 	password: { type: String, required: true },
 	imageUrl: {
 		type: String,
-		required: true,
-		default:
-			'https://res.cloudinary.com/dxediwgyn/image/upload/v1591847266/user-alt-512_jkdt8h.png',
+		default: 'noimage',
 	},
 	followers: [{ type: ObjectId, ref: 'User' }],
 	following: [{ type: ObjectId, ref: 'User' }],
 });
 
 module.exports = mongoose.model('User', userSchema);
+
+//'https://res.cloudinary.com/dxediwgyn/image/upload/v1591847266/user-alt-512_jkdt8h.png'

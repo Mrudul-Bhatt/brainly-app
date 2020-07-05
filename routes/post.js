@@ -109,8 +109,8 @@ router.put('/comments', requireLogin, (req, res) => {
 		});
 });
 
-router.delete('/deletepost/:postId', requireLogin, (req, res) => {
-	Post.findOne({ _id: req.params.postId })
+router.delete('/deletepost', requireLogin, (req, res) => {
+	Post.findOne({ _id: req.body.postId })
 		.populate('comments.postedBy', '_id name')
 		.populate('postedBy', '_id name imageUrl')
 		.exec((err, post) => {
@@ -121,7 +121,7 @@ router.delete('/deletepost/:postId', requireLogin, (req, res) => {
 				post
 					.remove()
 					.then((result) => {
-						res.json({ message: 'Post deleted successfully', result });
+						res.json({ message: 'Post deleted!', result });
 					})
 					.catch((error) => {
 						res.status(500).json({ error: 'Server is down, try again later' });

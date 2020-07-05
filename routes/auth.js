@@ -12,14 +12,14 @@ const router = express.Router();
 router.post('/signup', (req, res) => {
 	const { name, email, password } = req.body;
 
-	if (!email || !password || !name) {
-		return res.status(422).json({ error: 'Please enter all fields' });
-	}
+	// if (!email || !password || !name) {
+	// 	return res.status(422).json({ error: 'Please enter all fields!' });
+	// }
 
 	User.findOne({ email: email })
 		.then((savedUser) => {
 			if (savedUser) {
-				return res.status(422).json({ error: 'Email already exists' });
+				return res.status(422).json({ error: 'Email already exists!' });
 			}
 
 			bcrypt
@@ -32,9 +32,7 @@ router.post('/signup', (req, res) => {
 					});
 					newUser
 						.save()
-						.then((user) =>
-							res.json({ message: 'User account created successfully' })
-						)
+						.then((user) => res.json({ message: 'Account created' }))
 						.catch((error) => {
 							console.log(error);
 							return res
@@ -58,9 +56,9 @@ router.post('/signup', (req, res) => {
 router.post('/signin', (req, res) => {
 	const { email, password } = req.body;
 
-	if (!email || !password) {
-		return res.status(422).json({ error: 'Please enter all fields' });
-	}
+	// if (!email || !password) {
+	// 	return res.status(422).json({ error: 'Please enter all fields' });
+	// }
 	User.findOne({ email: email })
 		.then((savedUser) => {
 			if (!savedUser) {
@@ -81,7 +79,7 @@ router.post('/signin', (req, res) => {
 							imageUrl,
 						} = savedUser;
 						res.json({
-							message: 'Signin success',
+							message: 'Signed In',
 							token,
 							user: { _id, name, email, followers, following, imageUrl },
 						});
