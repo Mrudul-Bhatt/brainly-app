@@ -41,6 +41,18 @@ router.get('/mypost', requireLogin, (req, res) => {
 		});
 });
 
+//here i had to return one item but array was being returned so error was coming, so changed to findOne
+router.post('/singlepost', requireLogin, (req, res) => {
+	Post.findOne({ _id: req.body.itemId })
+		.populate('postedBy', '_id name imageUrl')
+		.populate('comments.postedBy', '_id name imageUrl')
+		.then((mypost) => res.json({ mypost }))
+		.catch((error) => {
+			console.log(error);
+			res.status(500).json({ error: 'Server is down, try again later' });
+		});
+});
+
 router.put('/like', requireLogin, (req, res) => {
 	Post.findByIdAndUpdate(
 		req.body.postId,
@@ -98,13 +110,39 @@ router.put('/comments', requireLogin, (req, res) => {
 			new: true,
 		}
 	)
-		.populate('comments.postedBy', '_id name')
+		.populate('comments.postedBy', '_id name imageUrl')
 		.populate('postedBy', '_id name imageUrl')
 		.exec((err, result) => {
 			if (err) {
 				return res.status(422).json({ error: err });
 			} else {
-				res.json(result);
+				res.json({ result });
+			}
+		});
+});
+
+router.put('/deletecomments', requireLogin, (req, res) => {
+	const comment = {
+		text: req.body.text,
+		postedBy: req.user._id,
+	};
+
+	Post.findByIdAndUpdate(
+		req.body.postId,
+		{
+			$pull: { comments: comment },
+		},
+		{
+			new: true,
+		}
+	)
+		.populate('comments.postedBy', '_id name imageUrl')
+		.populate('postedBy', '_id name imageUrl')
+		.exec((err, result) => {
+			if (err) {
+				return res.status(422).json({ error: err });
+			} else {
+				res.json({ result });
 			}
 		});
 });
