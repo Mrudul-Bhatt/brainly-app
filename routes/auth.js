@@ -5,16 +5,12 @@ const jwt = require('jsonwebtoken');
 
 //File Imports
 const User = require('../models/user');
-const { JWT_SECRET_KEY } = require('../config/keys');
+const { JWT_SECRET_KEY } = require('../config/dev');
 
 const router = express.Router();
 
 router.post('/signup', (req, res) => {
 	const { name, email, password } = req.body;
-
-	// if (!email || !password || !name) {
-	// 	return res.status(422).json({ error: 'Please enter all fields!' });
-	// }
 
 	User.findOne({ email: email })
 		.then((savedUser) => {
@@ -56,9 +52,6 @@ router.post('/signup', (req, res) => {
 router.post('/signin', (req, res) => {
 	const { email, password } = req.body;
 
-	// if (!email || !password) {
-	// 	return res.status(422).json({ error: 'Please enter all fields' });
-	// }
 	User.findOne({ email: email })
 		.then((savedUser) => {
 			if (!savedUser) {

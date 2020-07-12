@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
-const { MONGO_URI } = require('./config/keys');
+const { MONGO_URI } = require('./config/dev');
 const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -17,16 +17,6 @@ app.use(express.json());
 app.use(authRoutes);
 app.use(postRoutes);
 app.use(userRoutes);
-
-if (process.env.NODE_ENV === 'production') {
-	app.use(express.static('insta-react-front/build'));
-	const path = require('path');
-	app.get('*', (req, res) => {
-		res.sendFile(
-			path.resolve(__dirname, 'insta-react-front', 'build', 'index.html')
-		);
-	});
-}
 
 //Db
 mongoose
