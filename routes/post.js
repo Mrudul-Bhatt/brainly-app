@@ -6,8 +6,22 @@ const router = express.Router();
 
 router.get('/allpost', requireLogin, (req, res) => {
 	Post.find()
+		.sort('-createdAt')
 		.populate('postedBy', '_id name imageUrl')
-		.populate('comments.postedBy', '_id name')
+		.populate('comments.postedBy', '_id name imageUrl')
+		.then((posts) => {
+			res.json({ posts });
+		})
+		.catch((error) => {
+			console.log(error);
+			res.status(500).json({ error: 'Server is down, try again later' });
+		});
+});
+
+router.get('/allpostcollections', requireLogin, (req, res) => {
+	Post.find()
+		.populate('postedBy', '_id name imageUrl')
+		.populate('comments.postedBy', '_id name imageUrl')
 		.then((posts) => {
 			res.json({ posts });
 		})
@@ -19,8 +33,9 @@ router.get('/allpost', requireLogin, (req, res) => {
 
 router.get('/allsubpost', requireLogin, (req, res) => {
 	Post.find({ postedBy: { $in: req.user.following } })
+		.sort('-createdAt')
 		.populate('postedBy', '_id name imageUrl')
-		.populate('comments.postedBy', '_id name')
+		.populate('comments.postedBy', '_id name imageUrl')
 		.then((posts) => {
 			res.json({ posts });
 		})
@@ -32,8 +47,9 @@ router.get('/allsubpost', requireLogin, (req, res) => {
 
 router.get('/mypost', requireLogin, (req, res) => {
 	Post.find({ postedBy: req.user._id })
+		.sort('-createdAt')
 		.populate('postedBy', '_id name imageUrl')
-		.populate('comments.postedBy', '_id name')
+		.populate('comments.postedBy', '_id name imageUrl')
 		.then((mypost) => res.json({ mypost }))
 		.catch((error) => {
 			console.log(error);
@@ -53,6 +69,48 @@ router.post('/singlepost', requireLogin, (req, res) => {
 		});
 });
 
+router.put('/postcollectionF', requireLogin, (req, res) => {
+	Post.findByIdAndUpdate(
+		req.body.postId,
+		{
+			$pull: { postCollection: req.user._id },
+		},
+		{
+			new: true,
+		}
+	)
+		.populate('comments.postedBy', '_id name imageUrl')
+		.populate('postedBy', '_id name imageUrl')
+		.exec((err, result) => {
+			if (err) {
+				return res.status(422).json({ error: err });
+			} else {
+				res.json(result);
+			}
+		});
+});
+
+router.put('/postcollectionT', requireLogin, (req, res) => {
+	Post.findByIdAndUpdate(
+		req.body.postId,
+		{
+			$push: { postCollection: req.user._id },
+		},
+		{
+			new: true,
+		}
+	)
+		.populate('comments.postedBy', '_id name imageUrl')
+		.populate('postedBy', '_id name imageUrl')
+		.exec((err, result) => {
+			if (err) {
+				return res.status(422).json({ error: err });
+			} else {
+				res.json(result);
+			}
+		});
+});
+
 router.put('/like', requireLogin, (req, res) => {
 	Post.findByIdAndUpdate(
 		req.body.postId,
@@ -63,7 +121,7 @@ router.put('/like', requireLogin, (req, res) => {
 			new: true,
 		}
 	)
-		.populate('comments.postedBy', '_id name')
+		.populate('comments.postedBy', '_id name imageUrl')
 		.populate('postedBy', '_id name imageUrl')
 		.exec((err, result) => {
 			if (err) {
@@ -84,7 +142,7 @@ router.put('/unlike', requireLogin, (req, res) => {
 			new: true,
 		}
 	)
-		.populate('comments.postedBy', '_id name')
+		.populate('comments.postedBy', '_id name imageUrl')
 		.populate('postedBy', '_id name imageUrl')
 		.exec((err, result) => {
 			if (err) {
@@ -121,16 +179,11 @@ router.put('/comments', requireLogin, (req, res) => {
 		});
 });
 
-router.put('/deletecomments', requireLogin, (req, res) => {
-	const comment = {
-		text: req.body.text,
-		postedBy: req.user._id,
-	};
-
+router.put('/deletecomment', requireLogin, (req, res) => {
 	Post.findByIdAndUpdate(
 		req.body.postId,
 		{
-			$pull: { comments: comment },
+			$pull: { comments: req.body.comment },
 		},
 		{
 			new: true,
@@ -149,7 +202,7 @@ router.put('/deletecomments', requireLogin, (req, res) => {
 
 router.delete('/deletepost', requireLogin, (req, res) => {
 	Post.findOne({ _id: req.body.postId })
-		.populate('comments.postedBy', '_id name')
+		.populate('comments.postedBy', '_id name imageUrl')
 		.populate('postedBy', '_id name imageUrl')
 		.exec((err, post) => {
 			if (err || !post) {
@@ -170,7 +223,7 @@ router.delete('/deletepost', requireLogin, (req, res) => {
 });
 
 router.post('/createpost', requireLogin, (req, res) => {
-	const { title, body, imageUrl } = req.body;
+	const { title, body, imageUrl, dateCreated } = req.body;
 	if (!title || !body || !imageUrl) {
 		return res.status(422).json({ error: 'Please enter all fields' });
 	}
@@ -181,6 +234,7 @@ router.post('/createpost', requireLogin, (req, res) => {
 		title,
 		body,
 		imageUrl,
+		dateCreated,
 		postedBy: req.user,
 	});
 
@@ -192,6 +246,25 @@ router.post('/createpost', requireLogin, (req, res) => {
 		.catch((error) => {
 			console.log(error);
 			res.status(500).json({ error: 'Server is down, try again later' });
+		});
+});
+
+router.put('/editpost', requireLogin, (req, res) => {
+	Post.findByIdAndUpdate(
+		req.body.postId,
+		{
+			$set: { body: req.body.body },
+		},
+		{ new: true }
+	)
+		.populate('comments.postedBy', '_id name imageUrl')
+		.populate('postedBy', '_id name imageUrl')
+		.then((data) => {
+			res.json({ data });
+		})
+		.catch((err) => {
+			console.log(err);
+			res.status(500).json({ error: 'Server error' });
 		});
 });
 

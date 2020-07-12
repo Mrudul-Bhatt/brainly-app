@@ -112,8 +112,8 @@ router.put('/profileimg', requireLogin, (req, res) => {
 
 router.post('/search', (req, res) => {
 	let userPattern = new RegExp('^' + req.body.query);
-	User.find({ email: { $regex: userPattern } })
-		.select('_id email')
+	User.find({ name: { $regex: userPattern } })
+		.select('_id email name imageUrl')
 		.then((result) => {
 			res.json({ result });
 		})
